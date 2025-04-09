@@ -24,9 +24,12 @@ from datetime import datetime
 from functools import wraps
 from subprocess import PIPE, Popen
 
-import gtk
 import linuxcnc
-import pango
+
+import gi
+gi.require_version("Gtk", "3.0")
+gi.require_version("PangoCairo", "1.0")
+from gi.repository import Gtk, Gdk, cairo, Pango, PangoCairo
 
 from .configparser import ProbeScreenConfigParser
 from .util import restore_task_mode
@@ -266,9 +269,9 @@ class ProbeScreenBase(object):
         self, gtk_type, gtk_buttons, message, secondary=None, title=_("Probe Screen NG")
     ):
         """ displays a dialog """
-        dialog = gtk.MessageDialog(
+        dialog = Gtk.MessageDialog(
             self.window,
-            gtk.DIALOG_DESTROY_WITH_PARENT,
+            Gtk.DialogFlags.DESTROY_WITH_PARENT,
             gtk_type,
             gtk_buttons,
             message,
@@ -281,17 +284,17 @@ class ProbeScreenBase(object):
         dialog.set_title(title)
         responce = dialog.run()
         dialog.destroy()
-        return responce == gtk.RESPONSE_OK
+        return responce == Gtk.ResponseType.OK
 
     def warning_dialog(self, message, secondary=None, title=_("Probe Screen NG")):
         """ displays a warning dialog """
         return self._dialog(
-            gtk.MESSAGE_WARNING, gtk.BUTTONS_OK, message, secondary, title
+            Gtk.MessageType.WARNING, Gtk.ButtonsType.OK, message, secondary, title
         )
 
     def error_dialog(self, message, secondary=None, title=_("Probe Screen NG")):
         """ displays a warning dialog and exits the probe screen"""
-        self._dialog(gtk.MESSAGE_ERROR, gtk.BUTTONS_CLOSE, message, secondary, title)
+        self._dialog(Gtk.MessageType.ERROR, Gtk.ButtonsType.CLOSE, message, secondary, title)
         sys.exit(1)
 
     def display_result_a(self, value):
@@ -456,25 +459,25 @@ class ProbeScreenBase(object):
     #
     # --------------------------
     def on_common_spbtn_key_press_event(self, pin_name, gtkspinbutton, data=None):
-        keyname = gtk.gdk.keyval_name(data.keyval)
+        keyname = Gdk.keyval_name(data.keyval)
         if keyname == "Return":
             # Drop the Italics
-            gtkspinbutton.modify_font(pango.FontDescription("normal"))
+            gtkspinbutton.modify_font(Pango.FontDescription("normal"))
         elif keyname == "Escape":
             # Restore the original value
             gtkspinbutton.set_value(self.halcomp[pin_name])
 
             # Drop the Italics
-            gtkspinbutton.modify_font(pango.FontDescription("normal"))
+            gtkspinbutton.modify_font(Pango.FontDescription("normal"))
         else:
             # Set to Italics
-            gtkspinbutton.modify_font(pango.FontDescription("italic"))
+            gtkspinbutton.modify_font(Pango.FontDescription("italic"))
 
     def on_common_spbtn_value_changed(
         self, pin_name, gtkspinbutton, data=None, _type=float
     ):
         # Drop the Italics
-        gtkspinbutton.modify_font(pango.FontDescription("normal"))
+        gtkspinbutton.modify_font(Pango.FontDescription("normal"))
 
         # Update the pin
         self.halcomp[pin_name] = gtkspinbutton.get_value()
